@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stocky</title>
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,700" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='style.css') }}" rel='stylesheet'>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='underscore.js') }}"></script>
+    <script src="{{ url_for('static', filename='Chart.min.js') }}"></script>
+  </head>
+  <body>
+    <section id="main">
+      <form name="symbol_lookup" id="symbol_lookup">
+        <input type="text" name="symbol" pattern="[A-Za-z]{3,5}" title="Enter a valid stock symbol" maxlength="5" autofocus>
+      </form>
+
+      <canvas id="stock_chart" width="auto" height="150%"></canvas>
+      <div id="stock_data"></div>
+    </section>
+
+    <footer>Stock data real-time NYSE and NASDAQ information provided by <a href="http://finance.yahoo.com/" target="_blank">Yahoo! Finance</a>.</footer>
+
+    <script type="text/javascript">
+      $(document).ready(function(){
+        var showChart = function(dates, closePrices) {
+          // Chart
+          var data = {
+            labels: dates,
+            datasets: [
+              {
+                fillColor: "rgba(255, 255, 255, 0.1)",
+                strokeColor: "rgba(255, 255, 255, 0.25)",
+                pointColor: "rgba(255, 255, 255, 0.25)",
+                pointStrokeColor: "rgba(255, 255, 255 0.5)",
+                pointHighlightFill: "#fff",
+                pointHighlightStroke: "rgba(220,220,220,1)",
+                data: closePrices
+              }
+            ]
+          }
+
+          var options = {
+            bezierCurve: false,
+            scaleLineColor: "rgba(255, 255, 255, 0.1)",
+            scaleShowHorizontalLines: false,
+            scaleShowVerticalLines: false,
+            scaleShowGridLines: false,
+            scaleLineWidth: 0,
+            pointDot: true,
+            responsive: true,
+            scaleShowLabels: false,
+            scaleShowLine: false,
+            scaleFontColor: "rgba(255, 255, 255, 0.5)"
+          }
+
+          var ctx = document.getElementById('stock_chart').getContext('2d');
+          var myLineChart = new Chart(ctx).Line(data, options);
+        }
+
+        // DOM
+        $symbol_lookup_form = $("#symbol_lookup");
+        $stock_data         = $("#stock_data");
+
+        var symbol;
+
+        $symbol_lookup_form.submit(function(e){
+          e.preventDefault();
+
+          $("#main").addClass("active");
+
+          // Clear stock data output
+          $stock_data.html("");
+
+          symbol = $(this).find("input[name='symbol']").val();
+          symbol = symbol.toUpperCase();
+
+          var callback = function(data) {
+            symbol          = data["symbol"];
+            name            = data["name"];
+            price           = data["price"];
+            change_realtime = data["change_realtime"];
+            change_percent  = data["change_percent"];
+            status          = data["status"];
+            chart_history   = data["history"];
+
+            var keys = Object.keys(chart_history);
+            var closePrices = [];
+            var dates = [];
+
+            for (var i = 0; i < keys.length; i++) {
+              var val = chart_history[keys[i]];
+              var dateDay = keys[i];
+              dateDay = dateDay.substr(5);
+              dateDay = dateDay.replace("-", "/");
+
+              closePrices.push(val['Close']);
+              dates.push(dateDay);
+            }
+
+            // Validate stock symbol
+            if (price !== "N/A") {
+              $stock_data.append(
+                "<p>" + name + "</p>" +
+                "<sup>$</sup>" + price + "<em class='" + status + "'>" + change_realtime + " (" + change_percent + ")</em>"
+              ).fadeIn();
+            } else {
+              $stock_data.html("Not a valid symbol.");
+            }
+
+            showChart(dates, closePrices);
+          }
+
+          var failure = function() {
+            $stock_data.html("Error retrieving data.");
+          }
+
+          $.ajax({
+            contentType: "application/json",
+            type: "GET",
+            url: "/lookup",
+            data: { symbol: symbol },
+            dataType: "json",
+            success: callback,
+            error: failure
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
