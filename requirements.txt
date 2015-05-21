@@ -10,7 +10,6 @@ itsdangerous==0.24
 keyring==4.0
 linecache2==1.0.0
 lxml==3.4.2
-mintapi==1.5
 pbr==1.0.1
 pep8==1.5.7
 python-mimeparse==0.1.4
@@ -23,4 +22,3 @@ traceback2==1.4.0
 unittest2==1.0.1
 virtualenv==1.11.6
 xmltodict==0.9.0
-ystockquote==0.2.5dev
