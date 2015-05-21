@@ -1,0 +1,3 @@
+[submodule "ystockquote"]
+	path = ystockquote
+	url = https://github.com/cgoldberg/ystockquote.git
