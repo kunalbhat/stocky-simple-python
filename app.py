@@ -1,4 +1,4 @@
-import json, ystockquote, re, datetime
+import os, json, ystockquote, re, datetime
 from datetime import datetime, timedelta
 from flask import Flask, url_for, render_template, request, g, abort
 
